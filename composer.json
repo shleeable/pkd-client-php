@@ -1,0 +1,29 @@
+{
+  "name": "soatok/pkd-client",
+  "authors": [
+    {
+      "name": "Soatok Dreamseeker",
+      "email": "soatok.dhole@gmail.com",
+      "homepage": "https://soatok.blog"
+    }
+  ],
+  "autoload": {
+    "psr-4": {
+      "FediE2EE\\PKD\\": "src"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "FediE2EE\\PKD\\Tests\\": "tests"
+    }
+  },
+  "require": {
+    "ext-curl": "*",
+    "php": ">= 7.4",
+    "guzzlehttp/guzzle": "^7",
+    "paragonie/sodium_compat": "^1|^2"
+  },
+  "require-dev": {
+    "phpunit/phpunit": "^8|^9|^10|^11"
+  }
+}
