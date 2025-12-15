@@ -30,6 +30,9 @@ trait FetchTrait
     {
         $this->ensureHttpClientConfigured();
         $canonical = $this->canonicalize($actor);
+        if (is_null($this->httpClient)) {
+            throw new ClientException('HTTP client not set.');
+        }
         $response = $this->httpClient->get(
             $this->url . '/api/actor/' . urlencode($canonical) . '/keys'
         );
@@ -53,7 +56,7 @@ trait FetchTrait
     /**
      * @param string $actor
      * @param string $auxDataType
-     * @return array<string,
+     * @return AuxData[]
      * @throws ClientException
      * @throws ExtensionException
      * @throws GuzzleException
@@ -64,6 +67,9 @@ trait FetchTrait
     {
         $typeValidator = $this->registry->lookup($auxDataType);
         $this->ensureHttpClientConfigured();
+        if (is_null($this->httpClient)) {
+            throw new ClientException('HTTP client not set.');
+        }
         $canonical = $this->canonicalize($actor);
 
         // Get the list of aux-data registered for this actor
@@ -124,12 +130,16 @@ trait FetchTrait
      * @param string $auxDataID
      * @return ?AuxData
      *
+     * @throws ClientException
      * @throws GuzzleException
      */
     protected function fetchAuxDataInternal(
         string $canonical,
         string $auxDataID
     ): ?AuxData {
+        if (is_null($this->httpClient)) {
+            throw new ClientException('HTTP client not set.');
+        }
         $auxDataResponse = $this->httpClient->get(
             $this->url . '/api/actor/' . urlencode($canonical) . '/auxiliary/' . urlencode($auxDataID)
         );
@@ -137,6 +147,7 @@ trait FetchTrait
             return null;
         }
         try {
+            /** @var array{aux-type: string, aux-data: string, aux-id: string, actor-id: string} $body */
             $body = $this->parseJsonResponse($auxDataResponse, 'fedi-e2ee:v1/api/actor/get-aux');
             $this->assertKeysExist($body, ['aux-id', 'aux-type', 'aux-data', 'actor-id']);
             $typeValidator = $this->registry->lookup($body['aux-type']);
