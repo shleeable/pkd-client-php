@@ -17,7 +17,7 @@ final class ReadOnlyClient extends AbstractClient
     public function __construct(
         string $url,
         PublicKey $pk,
-        Registry $registry = null
+        ?Registry $registry = null
     ) {
         $this->url = $url;
         $this->pk = $pk;

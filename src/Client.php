@@ -22,7 +22,7 @@ final class Client extends AbstractClient
     public function __construct(
         string $url,
         PublicKey $pk,
-        Registry $registry = null,
+        ?Registry $registry = null,
         ?SecretKey $sk = null,
     ) {
         $this->url = $url;
