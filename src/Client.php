@@ -4,6 +4,7 @@ namespace FediE2EE\PKD;
 
 use FediE2EE\PKD\Crypto\PublicKey;
 use FediE2EE\PKD\Crypto\SecretKey;
+use FediE2EE\PKD\Extensions\Registry;
 use FediE2EE\PKD\Features\FetchTrait;
 use FediE2EE\PKD\Features\PublishTrait;
 
@@ -21,10 +22,15 @@ final class Client extends AbstractClient
     public function __construct(
         string $url,
         PublicKey $pk,
-        ?SecretKey $sk = null
+        Registry $registry = null,
+        ?SecretKey $sk = null,
     ) {
         $this->url = $url;
         $this->pk = $pk;
         $this->sk = $sk;
+        if (is_null($registry)) {
+            $registry = new Registry();
+        }
+        $this->registry = $registry;
     }
 }

@@ -3,6 +3,7 @@ declare(strict_types=1);
 namespace FediE2EE\PKD;
 
 use FediE2EE\PKD\Crypto\PublicKey;
+use FediE2EE\PKD\Extensions\Registry;
 use FediE2EE\PKD\Features\FetchTrait;
 
 /**
@@ -15,9 +16,14 @@ final class ReadOnlyClient extends AbstractClient
 
     public function __construct(
         string $url,
-        PublicKey $pk
+        PublicKey $pk,
+        Registry $registry = null
     ) {
         $this->url = $url;
         $this->pk = $pk;
+        if (is_null($registry)) {
+            $registry = new Registry();
+        }
+        $this->registry = $registry;
     }
 }

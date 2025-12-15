@@ -30,5 +30,5 @@ $publicKeys = $client->fetchPublicKeys('soatok@furry.engineer');
 var_dump($publicKeys); // array<PublicKey>
 
 $auxData = $client->fetchAuxData('soatok@furry.engineer', 'age-v1');
-var_dump($auxData); // array<AgeV1>
+var_dump($auxData); // array<AuxData>
 ```
