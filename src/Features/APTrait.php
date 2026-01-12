@@ -3,15 +3,19 @@ declare(strict_types=1);
 namespace FediE2EE\PKD\Features;
 
 use FediE2EE\PKD\Crypto\ActivityPub\WebFinger;
+use FediE2EE\PKD\Crypto\HttpSignature;
 use FediE2EE\PKD\Crypto\Exceptions\{
+    HttpSignatureException,
     JsonException,
-    NetworkException
+    NetworkException,
+    NotImplementedException
 };
 use FediE2EE\PKD\Exceptions\ClientException;
 use GuzzleHttp\Client as HttpClient;
 use GuzzleHttp\Exception\GuzzleException;
 use ParagonIE\Certainty\RemoteFetch;
 use Psr\Http\Message\ResponseInterface;
+use SodiumException;
 
 trait APTrait
 {
@@ -28,15 +32,42 @@ trait APTrait
         return $finger->canonicalize($actorName);
     }
 
+    /**
+     * @throws ClientException
+     * @throws GuzzleException
+     * @throws JsonException
+     * @throws NetworkException
+     */
+    public function getInboxUrl(string $actorName): string
+    {
+        if (is_null($this->httpClient)) {
+            throw new ClientException('The http client is not injected');
+        }
+        // Canonicalize Actor ID just in case.
+        $canonical = $this->canonicalize($actorName);
+        $response = $this->httpClient->get($canonical, [
+            'headers' => [
+                'Accept' => 'application/activity+json',
+            ]
+        ]);
+        $parsed = $this->parseJsonResponse($response);
+        if (!array_key_exists('inbox', $parsed)) {
+            throw new ClientException('JSON response did not contain inbox field');
+        }
+        return $parsed['inbox'];
+    }
+
     public function ensureHttpClientConfigured(): void
     {
         if (is_null($this->httpClient)) {
             // Default HTTP client configuration.
             // This uses paragonie/certainty to ensure CACert bundles are up to date.
             $this->httpClient = new HttpClient([
-                'verify' => new RemoteFetch(
+                'verify' => (new RemoteFetch(
                     dirname(__DIR__, 2) . '/.data'
-                )
+                ))
+                    ->getLatestBundle()
+                    ->getFilePath()
             ]);
         }
     }
@@ -45,6 +76,20 @@ trait APTrait
     {
         $this->httpClient = $httpClient;
         return $this;
+    }
+
+    /**
+     * @throws ClientException
+     * @throws HttpSignatureException
+     * @throws NotImplementedException
+     * @throws SodiumException
+     */
+    public function verifyHttpSignature(ResponseInterface $response): void
+    {
+        $sig = new HttpSignature();
+        if (!$sig->verify($this->pk, $response)) {
+            throw new ClientException('Invalid HTTP Signature from server');
+        }
     }
 
     /**

@@ -14,19 +14,22 @@
   },
   "autoload-dev": {
     "psr-4": {
-      "FediE2EE\\PKD\\Tests\\": "tests"
+      "FediE2EE\\PKD\\IntegrationTests\\": "tests/integration",
+      "FediE2EE\\PKD\\Tests\\": "tests/unit"
     }
   },
   "require": {
     "ext-curl": "*",
     "php": "^8.2",
-    "fedi-e2ee/pkd-crypto": "^0|^1",
+    "fedi-e2ee/pkd-crypto": "^0.21|^1",
     "fedi-e2ee/pkd-extensions": "^0|^1",
     "guzzlehttp/guzzle": "^7",
     "paragonie/sodium_compat": "^1|^2"
   },
   "require-dev": {
+    "paragonie/easydb": "^3",
     "phpunit/phpunit": "^8|^9|^10|^11|^12",
+    "soatok/mini-fedi-server": "^0",
     "vimeo/psalm": "^6"
   }
 }
