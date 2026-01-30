@@ -43,7 +43,7 @@ trait ProtocolTrait
     use PublishTrait;
 
     //= https://raw.githubusercontent.com/fedi-e2ee/public-key-directory-specification/refs/heads/main/Specification.md#addkey
-    //# AddKey: Add a public key to an actor's key set.
+    //# An `AddKey` message associated with an Actor is intended to associate a new Public Key to this actor.
     /**
      * @throws ClientException
      * @throws CryptoException
@@ -60,7 +60,7 @@ trait ProtocolTrait
         $actor = $this->canonicalize($actor);
         $addKey = new AddKey($actor, $newPublicKey);
         //= https://raw.githubusercontent.com/fedi-e2ee/public-key-directory-specification/refs/heads/main/Specification.md#message-attribute-shreddability
-        //# Sensitive attributes (Actor ID, public key) encrypted with unique 256-bit keys.
+        //# using a committing authenticated encryption mode.
         $keyring = (new AttributeKeyMap())
             ->addRandomKey('actor')
             ->addRandomKey('public-key');
@@ -69,7 +69,7 @@ trait ProtocolTrait
     }
 
     //= https://raw.githubusercontent.com/fedi-e2ee/public-key-directory-specification/refs/heads/main/Specification.md#revokekey
-    //# RevokeKey: Marks an existing public key as untrusted.
+    //# A `RevokeKey` message marks an existing public key as untrusted.
     /**
      * @throws ClientException
      * @throws CryptoException
@@ -94,7 +94,7 @@ trait ProtocolTrait
     }
 
     //= https://raw.githubusercontent.com/fedi-e2ee/public-key-directory-specification/refs/heads/main/Specification.md#revokekeythirdparty
-    //# RevokeKeyThirdParty: Emergency key revocation using a revocation token.
+    //# This is a special message type in two ways:
     /**
      * @throws ClientException
      * @throws CryptoException
@@ -111,7 +111,7 @@ trait ProtocolTrait
     }
 
     //= https://raw.githubusercontent.com/fedi-e2ee/public-key-directory-specification/refs/heads/main/Specification.md#moveidentity
-    //# MoveIdentity: Migrate actor identity from old-actor to new-actor.
+    //# This moves all the mappings from the old Actor ID to the new Actor ID.
     /**
      * @throws ClientException
      * @throws CryptoException
@@ -134,7 +134,7 @@ trait ProtocolTrait
     }
 
     //= https://raw.githubusercontent.com/fedi-e2ee/public-key-directory-specification/refs/heads/main/Specification.md#burndown
-    //# BurnDown: Soft delete for all public keys and auxiliary data unless Actor is Fireproof.
+    //# A `BurnDown` message acts as a soft delete for all public keys and auxiliary data for a given Actor
     /**
      * @throws ClientException
      * @throws CryptoException
@@ -154,7 +154,7 @@ trait ProtocolTrait
     }
 
     //= https://raw.githubusercontent.com/fedi-e2ee/public-key-directory-specification/refs/heads/main/Specification.md#fireproof
-    //# Fireproof: Opts out of BurnDown recovery mechanism.
+    //# `Fireproof` opts out of this recovery
     protected function createFireproof(string $actor): Bundle
     {
         $recent = $this->preamble();
@@ -166,7 +166,7 @@ trait ProtocolTrait
     }
 
     //= https://raw.githubusercontent.com/fedi-e2ee/public-key-directory-specification/refs/heads/main/Specification.md#undofireproof
-    //# UndoFireproof: Reverts Fireproof status, re-enabling account recovery.
+    //# This reverts the Fireproof status for a given Actor, re-enabling account recovery by instance administrators.
     protected function createUndoFireproof(string $actor): Bundle
     {
         $recent = $this->preamble();
