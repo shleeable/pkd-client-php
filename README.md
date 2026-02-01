@@ -2,6 +2,10 @@
 
 [![CI](https://github.com/fedi-e2ee/pkd-client-php/actions/workflows/ci.yml/badge.svg)](https://github.com/fedi-e2ee/pkd-client-php/actions/workflows/ci.yml)
 [![Psalm](https://github.com/fedi-e2ee/pkd-client-php/actions/workflows/psalm.yml/badge.svg)](https://github.com/fedi-e2ee/pkd-client-php/actions/workflows/psalm.yml)
+[![PHPStan](https://github.com/fedi-e2ee/pkd-client-php/actions/workflows/phpstan.yml/badge.svg)](https://github.com/fedi-e2ee/pkd-client-php/actions/workflows/phpstan.yml)
+[![Fuzzing](https://github.com/fedi-e2ee/pkd-client-php/actions/workflows/fuzz.yml/badge.svg)](https://github.com/fedi-e2ee/pkd-client-php/actions/workflows/fuzz.yml)
+[![Integration Tests](https://github.com/fedi-e2ee/pkd-client-php/actions/workflows/integration.yml/badge.svg)](https://github.com/fedi-e2ee/pkd-client-php/actions/workflows/integration.yml)
+[![Semgrep](https://github.com/fedi-e2ee/pkd-client-php/actions/workflows/semgrep.yml/badge.svg)](https://github.com/fedi-e2ee/pkd-client-php/actions/workflows/semgrep.yml)
 
 This is an implementation of the client-side component of the 
 [Public Key Directory specification](https://github.com/fedi-e2ee/public-key-directory-specification), written in PHP.
