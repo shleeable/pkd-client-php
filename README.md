@@ -4,6 +4,7 @@
 [![Psalm](https://github.com/fedi-e2ee/pkd-client-php/actions/workflows/psalm.yml/badge.svg)](https://github.com/fedi-e2ee/pkd-client-php/actions/workflows/psalm.yml)
 [![PHPStan](https://github.com/fedi-e2ee/pkd-client-php/actions/workflows/phpstan.yml/badge.svg)](https://github.com/fedi-e2ee/pkd-client-php/actions/workflows/phpstan.yml)
 [![Fuzzing](https://github.com/fedi-e2ee/pkd-client-php/actions/workflows/fuzz.yml/badge.svg)](https://github.com/fedi-e2ee/pkd-client-php/actions/workflows/fuzz.yml)
+[![Mutation](https://github.com/fedi-e2ee/pkd-client-php/actions/workflows/infection.yml/badge.svg)](https://github.com/fedi-e2ee/pkd-client-php/actions/workflows/infection.yml)
 [![Integration Tests](https://github.com/fedi-e2ee/pkd-client-php/actions/workflows/integration.yml/badge.svg)](https://github.com/fedi-e2ee/pkd-client-php/actions/workflows/integration.yml)
 [![Semgrep](https://github.com/fedi-e2ee/pkd-client-php/actions/workflows/semgrep.yml/badge.svg)](https://github.com/fedi-e2ee/pkd-client-php/actions/workflows/semgrep.yml)
 
