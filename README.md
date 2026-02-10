@@ -42,7 +42,8 @@ var_dump($auxData); // array<VerifiedAuxData>
 
 ### Verified Methods (Recommended)
 
-The `fetch*()` methods verify Merkle inclusion proofs, ensuring each key or auxiliary data item is properly committed to the PKD's append-only Merkle tree:
+The `fetch*()` methods verify Merkle inclusion proofs, ensuring each key or auxiliary data item is properly committed to
+the PKD's append-only Merkle tree:
 
 * `fetchPublicKeys(string $actor)` → `VerifiedPublicKey[]`
 * `fetchAuxData(string $actor, string $auxDataType)` → `VerifiedAuxData[]`
@@ -54,13 +55,15 @@ These methods throw `ClientException` if proof verification fails.
 > [!WARNING]
 > These APIs do not validate Merkle inclusion proofs. Use with caution!
 
-If you need to fetch public keys or auxiliary data without verifying the Merkle inclusion proofs, these methods are available too:
+If you need to fetch public keys or auxiliary data without verifying the Merkle inclusion proofs, these methods are 
+available too:
 
 * `fetchUnverifiedPublicKeys(string $actor)` → `PublicKey[]`
 * `fetchUnverifiedAuxData(string $actor, string $auxDataType)` → `AuxData[]`
 
 ### Hash Function Validation
 
-The verified methods accept an optional `$hashFunc` parameter (default: `'sha256'`). Only cryptographically secure hash functions are accepted: `sha256`, `sha384`, `sha512`, and `blake2b`.
+The verified methods accept an optional `$hashFunc` parameter (default: `'sha256'`). Only cryptographically secure hash
+functions are accepted: `sha256`, `sha384`, `sha512`, and `blake2b`.
 
 Attempting to use any other hash function will throw a `ClientException`.
