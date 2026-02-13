@@ -64,6 +64,8 @@ trait APTrait
             // Default HTTP client configuration.
             // This uses paragonie/certainty to ensure CACert bundles are up to date.
             $this->httpClient = new HttpClient([
+                'connect_timeout' => 10.0,
+                'timeout' => 30.0,
                 'verify' => (new RemoteFetch(
                     dirname(__DIR__, 2) . '/.data'
                 ))
