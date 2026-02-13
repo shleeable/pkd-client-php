@@ -56,6 +56,9 @@ trait FetchTrait
         $this->verifyHttpSignature($response);
         $body = $this->parseJsonResponse($response, 'fedi-e2ee:v1/api/actor/get-keys');
         $this->assertKeysExist($body, ['actor-id', 'public-keys']);
+        if (!hash_equals($canonical, $body['actor-id'])) {
+            throw new ClientException('Actor ID mismatch in response');
+        }
         if (!is_array($body['public-keys'])) {
             throw new ClientException('Invalid public-keys format');
         }
@@ -111,7 +114,10 @@ trait FetchTrait
         }
         $this->verifyHttpSignature($auxDataListResponse);
         $body = $this->parseJsonResponse($auxDataListResponse, 'fedi-e2ee:v1/api/actor/aux-info');
-        $this->assertKeysExist($body, ['auxiliary']);
+        $this->assertKeysExist($body, ['auxiliary', 'actor-id']);
+        if (!hash_equals($canonical, $body['actor-id'])) {
+            throw new ClientException('Actor ID mismatch in response');
+        }
         // Note: 'auxiliary' is an array of items, each with 'aux-id' and 'aux-type'
         // The iteration below naturally handles missing keys by skipping incomplete entries
 
@@ -196,6 +202,9 @@ trait FetchTrait
             /** @var array{aux-type: string, aux-data: string, aux-id: string, actor-id: string} $body */
             $body = $this->parseJsonResponse($auxDataResponse, 'fedi-e2ee:v1/api/actor/get-aux');
             $this->assertKeysExist($body, ['aux-id', 'aux-type', 'aux-data', 'actor-id']);
+            if (!hash_equals($canonical, $body['actor-id'])) {
+                throw new ClientException('Actor ID mismatch in response');
+            }
             $typeValidator = $this->registry->lookup($body['aux-type']);
         } catch (ClientException | ExtensionException) {
             return null;

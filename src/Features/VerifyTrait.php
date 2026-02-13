@@ -60,7 +60,7 @@ trait VerifyTrait
         int $treeSize
     ): bool {
         $this->assertValidHashFunction($hashFunction);
-        $rootBytes = $this->decodeMerkleRoot($merkleRoot);
+        $rootBytes = $this->decodeMerkleRoot($merkleRoot, $hashFunction);
 
         // Verify manually following RFC 9162 §2.1.3 since Tree::verifyInclusionProof
         // requires the full tree which we don't have on the client side.
@@ -74,6 +74,18 @@ trait VerifyTrait
     }
 
     /**
+     * Verify a Merkle inclusion proof manually following RFC 9162 §2.1.3.
+     *
+     * This implementation recomputes the Merkle root from the leaf and its
+     * audit path (siblings) and compares it with the expected root.
+     *
+     * @param string $hashFunction The hash function to use
+     * @param string $expectedRoot The expected Merkle root (raw bytes)
+     * @param string $leaf The leaf data to verify
+     * @param InclusionProof $proof The inclusion proof (audit path)
+     * @param int $treeSize The size of the tree at the time of the root
+     * @return bool True if the proof is valid, false otherwise
+     *
      * @throws SodiumException
      */
     protected function verifyInclusionProofInternal(
@@ -121,6 +133,16 @@ trait VerifyTrait
     }
 
     /**
+     * Compute a hash with a domain separator to prevent second-preimage attacks
+     * between leaves and internal nodes in the Merkle tree.
+     *
+     * Leaves are prefixed with 0x00, internal nodes with 0x01.
+     *
+     * @param string $hashFunction
+     * @param string $prefix Domain separator (\x00 or \x01)
+     * @param string $data
+     * @return string
+     *
      * @throws SodiumException
      */
     private function hashWithDomainSeparator(
@@ -166,6 +188,9 @@ trait VerifyTrait
         $this->verifyHttpSignature($response);
         $body = $this->parseJsonResponse($response, 'fedi-e2ee:v1/api/actor/get-keys');
         $this->assertKeysExist($body, ['actor-id', 'public-keys', 'merkle-root', 'tree-size']);
+        if (!hash_equals($canonical, $body['actor-id'])) {
+            throw new ClientException('Actor ID mismatch in response');
+        }
 
         if (!is_string($body['merkle-root'])) {
             throw new ClientException('Invalid merkle-root format');
@@ -175,6 +200,9 @@ trait VerifyTrait
         }
         if (!is_int($body['tree-size']) && !is_string($body['tree-size'])) {
             throw new ClientException('Invalid tree-size format');
+        }
+        if (is_string($body['tree-size']) && !ctype_digit($body['tree-size'])) {
+            throw new ClientException('Invalid tree-size: must be a numeric string');
         }
 
         $merkleRoot = $body['merkle-root'];
@@ -251,7 +279,10 @@ trait VerifyTrait
             $auxDataListResponse,
             'fedi-e2ee:v1/api/actor/aux-info'
         );
-        $this->assertKeysExist($body, ['auxiliary', 'merkle-root', 'tree-size']);
+        $this->assertKeysExist($body, ['auxiliary', 'merkle-root', 'tree-size', 'actor-id']);
+        if (!hash_equals($canonical, $body['actor-id'])) {
+            throw new ClientException('Actor ID mismatch in response');
+        }
 
         if (!is_string($body['merkle-root'])) {
             throw new ClientException('Invalid merkle-root format');
@@ -261,6 +292,9 @@ trait VerifyTrait
         }
         if (!is_int($body['tree-size']) && !is_string($body['tree-size'])) {
             throw new ClientException('Invalid tree-size format');
+        }
+        if (is_string($body['tree-size']) && !ctype_digit($body['tree-size'])) {
+            throw new ClientException('Invalid tree-size: must be a numeric string');
         }
 
         $merkleRoot = $body['merkle-root'];
@@ -385,9 +419,12 @@ trait VerifyTrait
     /**
      * Decode a Merkle root from its prefixed format.
      *
+     * @param string $merkleRoot
+     * @param string|null $hashFunc The hash function used, for length validation
+     * @return string
      * @throws ClientException If the format is invalid
      */
-    protected function decodeMerkleRoot(string $merkleRoot): string
+    protected function decodeMerkleRoot(string $merkleRoot, ?string $hashFunc = null): string
     {
         $prefix = 'pkd-mr-v1:';
         if (!str_starts_with($merkleRoot, $prefix)) {
@@ -397,8 +434,17 @@ trait VerifyTrait
         $encoded = substr($merkleRoot, strlen($prefix));
         $decoded = Base64UrlSafe::decodeNoPadding($encoded);
 
-        if (strlen($decoded) < 32) {
-            throw new ClientException('Invalid Merkle root format: expected 32+ bytes');
+        $expectedLen = match ($hashFunc) {
+            'sha256', 'blake2b' => 32,
+            'sha384' => 48,
+            'sha512' => 64,
+            default => 32,
+        };
+
+        if (strlen($decoded) < $expectedLen) {
+            throw new ClientException(
+                "Invalid Merkle root format: expected at least {$expectedLen} bytes for {$hashFunc}"
+            );
         }
 
         return $decoded;

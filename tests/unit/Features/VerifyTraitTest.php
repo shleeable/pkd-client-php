@@ -378,9 +378,33 @@ class VerifyTraitTest extends TestCase
         $invalidRoot = 'pkd-mr-v1:' . Base64UrlSafe::encodeUnpadded(str_repeat("\x00", 16));
 
         $this->expectException(ClientException::class);
-        $this->expectExceptionMessage('Invalid Merkle root format: expected 32+ bytes');
+        $this->expectExceptionMessage('Invalid Merkle root format: expected at least 32 bytes for sha256');
 
         $client->verifyInclusionProof('sha256', $invalidRoot, 'leaf1', $proof, $tree->getSize());
+    }
+
+    /**
+     * @throws ClientException
+     * @throws CryptoException
+     * @throws NotImplementedException
+     * @throws SodiumException
+     */
+    public function testDecodeMerkleRootThrowsOnInvalidLengthForSha512(): void
+    {
+        $serverPk = $this->serverKey->getPublicKey();
+        $client = new ReadOnlyClient('http://pkd.test', $serverPk);
+
+        $leaves = ['leaf1', 'leaf2'];
+        $tree = new Tree($leaves, 'sha512');
+        $proof = $tree->getInclusionProof('leaf1');
+
+        // Root with 32 bytes but 64 expected for SHA512
+        $invalidRoot = 'pkd-mr-v1:' . Base64UrlSafe::encodeUnpadded(str_repeat("\x00", 32));
+
+        $this->expectException(ClientException::class);
+        $this->expectExceptionMessage('Invalid Merkle root format: expected at least 64 bytes for sha512');
+
+        $client->verifyInclusionProof('sha512', $invalidRoot, 'leaf1', $proof, $tree->getSize());
     }
 
     /**
@@ -1471,7 +1495,7 @@ class VerifyTraitTest extends TestCase
         $client->setHttpClient($this->createMockClient([$webFingerResponse, $keysResponse]));
 
         $this->expectException(ClientException::class);
-        $this->expectExceptionMessage('Invalid tree-size: must be positive');
+        $this->expectExceptionMessage('Invalid tree-size: must be a numeric string');
 
         $client->fetchPublicKeys('alice@example.com');
     }
@@ -1517,8 +1541,46 @@ class VerifyTraitTest extends TestCase
         $client->setHttpClient($this->createMockClient([$webFingerResponse, $auxInfoResponse]));
 
         $this->expectException(ClientException::class);
-        $this->expectExceptionMessage('Invalid tree-size: must be positive');
+        $this->expectExceptionMessage('Invalid tree-size: must be a numeric string');
 
         $client->fetchAuxData('alice@example.com', 'test-type');
+    }
+
+    /**
+     * @throws ClientException
+     * @throws NotImplementedException
+     * @throws SodiumException
+     */
+    public function testFetchPublicKeysThrowsOnActorIdMismatch(): void
+    {
+        $serverPk = $this->serverKey->getPublicKey();
+        $client = new ReadOnlyClient('http://pkd.test', $serverPk);
+
+        $actorUrl = 'https://example.com/users/alice';
+        $wrongActorUrl = 'https://example.com/users/malice';
+
+        $webFingerResponse = TestHelper::createWebFingerResponse(
+            'alice',
+            'example.com',
+            $actorUrl
+        );
+
+        $keysResponse = TestHelper::createSignedJsonResponse(
+            $this->serverKey,
+            [
+                'actor-id' => $wrongActorUrl,
+                'public-keys' => [],
+                'merkle-root' => 'pkd-mr-v1:' . Base64UrlSafe::encodeUnpadded(str_repeat("\x00", 32)),
+                'tree-size' => 1
+            ],
+            'fedi-e2ee:v1/api/actor/get-keys'
+        );
+
+        $client->setHttpClient($this->createMockClient([$webFingerResponse, $keysResponse]));
+
+        $this->expectException(ClientException::class);
+        $this->expectExceptionMessage('Actor ID mismatch in response');
+
+        $client->fetchPublicKeys('alice@example.com');
     }
 }

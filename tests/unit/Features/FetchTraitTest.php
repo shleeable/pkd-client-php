@@ -79,6 +79,34 @@ class FetchTraitTest extends TestCase
      * @throws NotImplementedException
      * @throws SodiumException
      */
+    public function testFetchPublicKeysThrowsOnActorIdMismatch(): void
+    {
+        $actorUrl = 'https://example.com/users/alice';
+        $wrongActorUrl = 'https://example.com/users/malice';
+
+        $webFingerResponse = TestHelper::createWebFingerResponse('alice', 'example.com', $actorUrl);
+        $keysResponse = TestHelper::createPublicKeysResponse(
+            $this->serverKey,
+            $wrongActorUrl,
+            [['public-key' => SecretKey::generate()->getPublicKey()->toString()]]
+        );
+
+        $this->httpClient = $this->createMockClient([$webFingerResponse, $keysResponse]);
+
+        $this->expectException(ClientException::class);
+        $this->expectExceptionMessage('Actor ID mismatch in response');
+        $this->fetchUnverifiedPublicKeys('alice@example.com');
+    }
+
+    /**
+     * @throws ClientException
+     * @throws GuzzleException
+     * @throws HttpSignatureException
+     * @throws JsonException
+     * @throws NetworkException
+     * @throws NotImplementedException
+     * @throws SodiumException
+     */
     public function testFetchPublicKeysBuildsCorrectUrl(): void
     {
         $history = [];

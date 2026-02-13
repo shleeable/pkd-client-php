@@ -80,7 +80,15 @@ trait APTrait
     }
 
     /**
-     * @throws ClientException
+     * Verify the HTTP signature of a response from the PKD server.
+     *
+     * This ensures that the response was indeed sent by the PKD server we trust,
+     * and that it hasn't been tampered with in transit.
+     *
+     * @param ResponseInterface $response
+     * @return void
+     *
+     * @throws ClientException If the signature is invalid
      * @throws HttpSignatureException
      * @throws NotImplementedException
      * @throws SodiumException
