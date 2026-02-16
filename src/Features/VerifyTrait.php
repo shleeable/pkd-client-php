@@ -60,7 +60,7 @@ trait VerifyTrait
         int $treeSize
     ): bool {
         $this->assertValidHashFunction($hashFunction);
-        $rootBytes = $this->decodeMerkleRoot($merkleRoot);
+        $rootBytes = $this->decodeMerkleRoot($merkleRoot, $hashFunction);
 
         // Verify manually following RFC 9162 §2.1.3 since Tree::verifyInclusionProof
         // requires the full tree which we don't have on the client side.
@@ -390,8 +390,9 @@ trait VerifyTrait
      * Decode a Merkle root from its prefixed format.
      *
      * @throws ClientException If the format is invalid
+     * Supported $hashFunction 'sha256', 'sha384', 'sha512', 'blake2b'
      */
-    protected function decodeMerkleRoot(string $merkleRoot): string
+    protected function decodeMerkleRoot(string $merkleRoot, string $hashFunction): string
     {
         $prefix = 'pkd-mr-v1:';
         if (!str_starts_with($merkleRoot, $prefix)) {
@@ -401,8 +402,16 @@ trait VerifyTrait
         $encoded = substr($merkleRoot, strlen($prefix));
         $decoded = Base64UrlSafe::decodeNoPadding($encoded);
 
-        if (strlen($decoded) < 32) {
-            throw new ClientException('Invalid Merkle root format: expected 32+ bytes');
+        $expectedByteLen = match ($hashFunction) {
+            'sha256' => 32,
+            'sha384' => 48,
+            'sha512' => 64,
+            'blake2b' => 32,  // variable-length 8 to 512 bits (1 to 64 bytes) but 32 minimum for safety.
+            default => 32,  // Fallback to 32 bytes as a minimum but $hashFunc should never be null.
+        };
+
+        if (strlen($decoded) < $expectedByteLen) {
+            throw new ClientException("decodeMerkleRoot: Invalid Merkle root format. Expected a minimum of {$expectedByteLen} bytes for {$hashFunction} - Got {$decoded}");
         }
 
         return $decoded;
